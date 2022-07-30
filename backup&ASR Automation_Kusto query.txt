@@ -1,0 +1,31 @@
+
+Backup:-
+    
+
+AddonAzureBackupJobs   
+| where JobOperation=="Backup"
+| where TimeGenerated > now() - 24h
+| where JobStatus=="Completed"
+| join kind=inner
+(
+CoreAzureBackup
+| where OperationName == "BackupItem"
+| where BackupItemType=="VM" and BackupManagementType=="IaaSVM"
+| distinct BackupItemUniqueId, BackupItemFriendlyName, BackupItemType, State
+)
+on BackupItemUniqueId
+| project BackupItemFriendlyName, JobStatus, TimeGenerated, BackupItemType, State, JobStartDateTime
+| distinct BackupItemFriendlyName, JobStatus, TimeGenerated, BackupItemType, State, JobStartDateTime
+| sort by BackupItemFriendlyName asc
+
+
+ASR:-   
+
+AzureDiagnostics
+|where TimeGenerated > now() - 24h
+|where replicationProviderName_s =="A2A"
+|where isnotempty(name_s) and isnotnull(name_s)
+|summarize hint.strategy=partitioned arg_max(TimeGenerated, *)by name_s
+|project VirtualMachine = name_s , Vault = Resource, ReplicationHealth = replicationHealth_s , Status = protectionState_s
+|sort by VirtualMachine asc
+
