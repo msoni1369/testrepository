@@ -2,3 +2,7 @@ https://webtest-01.azurewebsites.net/.auth/login/aad/callback
 install-windowsfeature -name web-server -includemanagementtools
 
 Needb to add the function app link
+
+
+
+hello
